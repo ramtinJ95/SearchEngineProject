@@ -1,5 +1,7 @@
 package com.search.searchengine.model;
-
+/**
+ * PLEASE NOTE: This class is not to be used for Elastic-Search. This is a model for the MySQL database.
+ */
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.CreatedDate;
