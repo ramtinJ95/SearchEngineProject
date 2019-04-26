@@ -2,6 +2,7 @@ package com.search.searchengine.controller;
 
 import com.search.searchengine.model.DocumentES;
 import com.search.searchengine.repository.DocumentDao;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -9,13 +10,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/documents")
 public class DocumentController {
-    private DocumentDao documentDao;
+    @Autowired
+    DocumentDao documentDao;
 
     public DocumentController(DocumentDao documentDao){
         this.documentDao = documentDao;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{documentId}")
     public Map<String, Object> getDocumentById(@PathVariable String documentId){
         return documentDao.getDocumentById(documentId);
     }

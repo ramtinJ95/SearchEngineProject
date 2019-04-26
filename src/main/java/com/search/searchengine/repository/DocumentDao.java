@@ -14,6 +14,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.stereotype.Repository;
 
@@ -23,7 +24,7 @@ import java.util.UUID;
 
 @Repository
 public class DocumentDao {
-    private final String INDEX = "DocumentData";
+    private final String INDEX = "documentdata";
     private final String TYPE = "events";
     private RestHighLevelClient restHighLevelClient;
     private ObjectMapper objectMapper;
@@ -31,13 +32,17 @@ public class DocumentDao {
     public DocumentDao(ObjectMapper objectMapper, RestHighLevelClient restHighLevelClient){
         this.objectMapper = objectMapper;
         this.restHighLevelClient = restHighLevelClient;
+
+        CreateIndexRequest request = new CreateIndexRequest(INDEX);
+        String didItWork = request.index();
+        System.out.println(didItWork);
     }
 
     // insert
     public DocumentES insertDocument(DocumentES document){
         document.setId(UUID.randomUUID().toString());
         Map dataMap = objectMapper.convertValue(document, Map.class);
-        IndexRequest indexRequest = new IndexRequest(INDEX, TYPE, document.getId()).source(dataMap);
+        IndexRequest indexRequest = new IndexRequest(INDEX).id(document.getId()).source(dataMap);
 
         try {
             IndexResponse response = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
@@ -51,7 +56,7 @@ public class DocumentDao {
 
     // search query by id for now
     public Map<String, Object> getDocumentById(String documentId){
-        GetRequest getRequest = new GetRequest(INDEX, TYPE, documentId);
+        GetRequest getRequest = new GetRequest(INDEX,documentId);
         GetResponse getResponse = null;
         try {
             getResponse = restHighLevelClient.get(getRequest, RequestOptions.DEFAULT);
