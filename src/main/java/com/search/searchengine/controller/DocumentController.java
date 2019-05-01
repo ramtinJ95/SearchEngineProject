@@ -30,14 +30,6 @@ public class DocumentController {
     }
 
 
-/*
-    @PostMapping
-    public EventDocument insertEventAsDocument(@RequestBody Event event) throws Exception {
-        return documentDao.insertEventAsDocument(event);
-    }
-
- */
-
     // update document
     @PutMapping("/{id}")
     public Map<String, Object> updateDocumentById(@RequestBody DocumentES documentES, @PathVariable String id){
