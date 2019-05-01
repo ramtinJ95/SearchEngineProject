@@ -1,6 +1,7 @@
 package com.search.searchengine.controller;
 
 import com.search.searchengine.model.DocumentES;
+import com.search.searchengine.model.Event;
 import com.search.searchengine.repository.DocumentDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -24,9 +25,18 @@ public class DocumentController {
 
     // insert document
     @PostMapping
-    public DocumentES insertDocument(@RequestBody DocumentES documentES) throws Exception {
-        return documentDao.insertDocument(documentES);
+    public DocumentES insertDocument(@RequestBody DocumentES document) throws Exception {
+        return documentDao.insertDocument(document);
     }
+
+
+/*
+    @PostMapping
+    public EventDocument insertEventAsDocument(@RequestBody Event event) throws Exception {
+        return documentDao.insertEventAsDocument(event);
+    }
+
+ */
 
     // update document
     @PutMapping("/{id}")

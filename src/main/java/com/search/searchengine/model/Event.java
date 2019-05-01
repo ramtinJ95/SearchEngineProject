@@ -4,6 +4,50 @@ import java.io.Serializable;
 
 public class Event implements Serializable {
     private Name name;
+    private Description description;
+    private String organization_id;
+    private String created;
+    private String changed;
+    private String published;
+    private String capacity;
+    private Boolean capacity_is_custom;
+    private String status;
+    private String currency;
+    private String USD;
+    private Boolean listed;
+    private Boolean shareable;
+    private Boolean online_event;
+    private Integer tx_time_limit;
+    private Boolean hide_start_date;
+    private Boolean hide_end_date;
+    private String locale;
+    private Boolean is_locked;
+    private String privacy_setting;
+    private Boolean is_series;
+    private Boolean is_series_parent;
+    private String inventory_type;
+    private Boolean is_reserved_seating;
+    private Boolean show_pick_a_seat;
+    private Boolean show_seatmap_thumbnail;
+    private Boolean show_colors_in_seatmap_thumbnail;
+    private String source;
+    private Boolean is_free;
+    private String version;
+    private String summary;
+    private String logo_id;
+    private String organizer_id;
+    private String venue_id;
+    private String category_id;
+    private String subcategory_id;
+    private String format_id;
+    private String resource_uri;
+    private Boolean is_externally_ticketed;
+    private Logo logo;
+    private String id;
+    private String url;
+    private String vanity_url;
+    private Time start;
+    private Time end;
 
     class Name implements Serializable {
         String text;
@@ -26,16 +70,16 @@ public class Event implements Serializable {
         }
     }
 
-    public Name getName() {
-        return name;
+    public String getName() {
+        return name.getText();
     }
 
     public void setName(Name name) {
         this.name = name;
     }
 
-    public Description getDescription() {
-        return description;
+    public String getDescription() {
+        return description.text;
     }
 
     public void setDescription(Description description) {
@@ -386,7 +430,6 @@ public class Event implements Serializable {
         this.logo = logo;
     }
 
-    private Description description;
 
     class Description implements Serializable {
         String text;
@@ -408,13 +451,6 @@ public class Event implements Serializable {
             this.html = html;
         }
     }
-
-    private String id;
-    private String url;
-    private String vanity_url;
-
-    private Time start;
-    private Time end;
 
     class Time implements Serializable {
         String timezone;
@@ -446,44 +482,6 @@ public class Event implements Serializable {
         }
     }
 
-    private String organization_id;
-    private String created;
-    private String changed;
-    private String published;
-    private String capacity;
-    private Boolean capacity_is_custom;
-    private String status;
-    private String currency;
-    private String USD;
-    private Boolean listed;
-    private Boolean shareable;
-    private Boolean online_event;
-    private Integer tx_time_limit;
-    private Boolean hide_start_date;
-    private Boolean hide_end_date;
-    private String locale;
-    private Boolean is_locked;
-    private String privacy_setting;
-    private Boolean is_series;
-    private Boolean is_series_parent;
-    private String inventory_type;
-    private Boolean is_reserved_seating;
-    private Boolean show_pick_a_seat;
-    private Boolean show_seatmap_thumbnail;
-    private Boolean show_colors_in_seatmap_thumbnail;
-    private String source;
-    private Boolean is_free;
-    private String version;
-    private String summary;
-    private String logo_id;
-    private String organizer_id;
-    private String venue_id;
-    private String category_id;
-    private String subcategory_id;
-    private String format_id;
-    private String resource_uri;
-    private Boolean is_externally_ticketed;
-    private Logo logo;
 
     class Logo implements Serializable {
         CropMask crop_mask;

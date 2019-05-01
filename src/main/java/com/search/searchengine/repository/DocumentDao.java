@@ -53,7 +53,25 @@ public class DocumentDao {
         }
         return document;
     }
+/*
+    public EventDocument insertEventAsDocument(Event event){
+        EventDocument eventDocument = new EventDocument();
+        eventDocument.setEvent(event);
+        eventDocument.setId(UUID.randomUUID().toString());
+        Map dataMap = objectMapper.convertValue(eventDocument, Map.class);
+        IndexRequest indexRequest = new IndexRequest(INDEX).id(eventDocument.getId()).source(dataMap);
+        try{
+            IndexResponse response = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+        } catch (ElasticsearchException e){
+            e.getDetailedMessage();
+        } catch (java.io.IOException ex) {
+            ex.getLocalizedMessage();
+        }
+        return eventDocument;
+    }
 
+
+ */
     // search query by id for now
     public Map<String, Object> getDocumentById(String documentId){
         GetRequest getRequest = new GetRequest(INDEX,documentId);
