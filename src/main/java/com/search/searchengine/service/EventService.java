@@ -1,7 +1,6 @@
 package com.search.searchengine.service;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.search.searchengine.model.DocumentES;
 import com.search.searchengine.model.Event;
 import com.search.searchengine.model.EventWrapper;
@@ -19,7 +18,7 @@ public class EventService {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth("VPVPICQJQCFVVQM5ELQF");
+        headers.setBearerAuth("Add your own api key");
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         HttpEntity<String> entity = new HttpEntity<String>(headers);
 
