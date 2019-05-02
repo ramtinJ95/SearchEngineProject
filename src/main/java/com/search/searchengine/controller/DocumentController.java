@@ -1,7 +1,6 @@
 package com.search.searchengine.controller;
 
 import com.search.searchengine.model.DocumentES;
-import com.search.searchengine.model.Event;
 import com.search.searchengine.repository.DocumentDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +20,11 @@ public class DocumentController {
     @GetMapping("/{documentId}")
     public Map<String, Object> getDocumentById(@PathVariable String documentId){
         return documentDao.getDocumentById(documentId);
+    }
+
+    @GetMapping("/search/{query}")
+    public String queryIndex(@PathVariable String query) {
+        return documentDao.getDocumentsForQuery(query);
     }
 
     // insert document

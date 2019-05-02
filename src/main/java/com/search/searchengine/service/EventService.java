@@ -19,7 +19,7 @@ public class EventService {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth("Put your API key here");
+        headers.setBearerAuth("VPVPICQJQCFVVQM5ELQF");
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         HttpEntity<String> entity = new HttpEntity<String>(headers);
 
@@ -36,6 +36,7 @@ public class EventService {
     }
 
     private static void insertEventsAsJsonDocuments(ArrayList<Event> eventList){
+
         for(int i = 0; i < eventList.size(); i++){
             Event event = eventList.get(i);
             RestTemplate restTemplate = new RestTemplate();

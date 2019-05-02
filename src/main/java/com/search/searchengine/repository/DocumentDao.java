@@ -2,6 +2,7 @@ package com.search.searchengine.repository;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.search.searchengine.model.DocumentES;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -10,12 +11,18 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
@@ -94,5 +101,27 @@ public class DocumentDao {
         } catch (java.io.IOException e) {
             e.getLocalizedMessage();
         }
+    }
+
+    // Search for query
+    public String getDocumentsForQuery(String query) {
+        SearchRequest searchRequest = new SearchRequest(INDEX);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
+        searchRequest.source(searchSourceBuilder);
+        SearchResponse searchResponse = null;
+
+        try{
+            searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+        } catch (java.io.IOException e) {
+            e.getLocalizedMessage();
+        }
+
+        String result = searchResponse.toString();
+        Gson gson = new Gson();
+
+        result = gson.toJson(result);
+
+        return result;
     }
 }
