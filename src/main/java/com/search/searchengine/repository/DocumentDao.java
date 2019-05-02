@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.search.searchengine.model.DocumentES;
+import com.search.searchengine.utility.Utilities;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -35,6 +36,7 @@ public class DocumentDao {
     private final String TYPE = "events";
     private RestHighLevelClient restHighLevelClient;
     private ObjectMapper objectMapper;
+    private Utilities utilities = new Utilities();
 
     public DocumentDao(ObjectMapper objectMapper, RestHighLevelClient restHighLevelClient){
         this.objectMapper = objectMapper;
@@ -107,6 +109,7 @@ public class DocumentDao {
     public String getDocumentsForQuery(String query) {
         SearchRequest searchRequest = new SearchRequest(INDEX);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.size(100);
         searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
         searchRequest.source(searchSourceBuilder);
         SearchResponse searchResponse = null;
@@ -118,10 +121,7 @@ public class DocumentDao {
         }
 
         String result = searchResponse.toString();
-        Gson gson = new Gson();
+        return utilities.formatString(result);
 
-        result = gson.toJson(result);
-
-        return result;
     }
 }
