@@ -20,15 +20,13 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Repository
 public class DocumentDao {
@@ -38,7 +36,7 @@ public class DocumentDao {
     private ObjectMapper objectMapper;
     private Utilities utilities = new Utilities();
 
-    public DocumentDao(ObjectMapper objectMapper, RestHighLevelClient restHighLevelClient){
+    public DocumentDao(ObjectMapper objectMapper, RestHighLevelClient restHighLevelClient) {
         this.objectMapper = objectMapper;
         this.restHighLevelClient = restHighLevelClient;
 
@@ -48,28 +46,28 @@ public class DocumentDao {
     }
 
     // insert
-    public DocumentES insertDocument(DocumentES document){
+    public DocumentES insertDocument(DocumentES document) {
         document.setId(UUID.randomUUID().toString());
         Map dataMap = objectMapper.convertValue(document, Map.class);
         IndexRequest indexRequest = new IndexRequest(INDEX).id(document.getId()).source(dataMap);
 
         try {
             IndexResponse response = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
-        } catch(ElasticsearchException e) {
+        } catch (ElasticsearchException e) {
             e.getDetailedMessage();
-        } catch (java.io.IOException ex){
+        } catch (java.io.IOException ex) {
             ex.getLocalizedMessage();
         }
         return document;
     }
 
     // search query by id for now
-    public Map<String, Object> getDocumentById(String documentId){
-        GetRequest getRequest = new GetRequest(INDEX,documentId);
+    public Map<String, Object> getDocumentById(String documentId) {
+        GetRequest getRequest = new GetRequest(INDEX, documentId);
         GetResponse getResponse = null;
         try {
             getResponse = restHighLevelClient.get(getRequest, RequestOptions.DEFAULT);
-        } catch (java.io.IOException e){
+        } catch (java.io.IOException e) {
             e.getLocalizedMessage();
         }
         Map<String, Object> sourceAsMap = getResponse.getSourceAsMap();
@@ -77,17 +75,17 @@ public class DocumentDao {
     }
 
     // update document by id
-    public Map<String, Object> updateDocumentById(String documentId, DocumentES document){
+    public Map<String, Object> updateDocumentById(String documentId, DocumentES document) {
         UpdateRequest updateRequest = new UpdateRequest(INDEX, TYPE, documentId).fetchSource(true); // fetch object after update
         Map<String, Object> error = new HashMap<>();
         error.put("Error", "unable to update docuemnt");
-        try{
+        try {
             String documentJson = objectMapper.writeValueAsString(document);
             updateRequest.doc(documentJson, XContentType.JSON);
             UpdateResponse updateResponse = restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
             Map<String, Object> sourceAsMap = updateResponse.getGetResult().sourceAsMap();
             return sourceAsMap;
-        } catch (JsonProcessingException e){
+        } catch (JsonProcessingException e) {
             e.getMessage();
         } catch (java.io.IOException e) {
             e.getLocalizedMessage();
@@ -96,9 +94,9 @@ public class DocumentDao {
     }
 
     // delete document
-    public void deleteDocumentById(String documentId){
+    public void deleteDocumentById(String documentId) {
         DeleteRequest deleteRequest = new DeleteRequest(INDEX, TYPE, documentId);
-        try{
+        try {
             DeleteResponse deleteResponse = restHighLevelClient.delete(deleteRequest, RequestOptions.DEFAULT);
         } catch (java.io.IOException e) {
             e.getLocalizedMessage();
@@ -114,14 +112,19 @@ public class DocumentDao {
         searchRequest.source(searchSourceBuilder);
         SearchResponse searchResponse = null;
 
-        try{
+        try {
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
         } catch (java.io.IOException e) {
             e.getLocalizedMessage();
         }
-
-        String result = searchResponse.toString();
-        return utilities.formatString(result);
-
+        SearchHits hits = searchResponse.getHits();
+        SearchHit[] searchHits = hits.getHits();
+        List<String> resultList = new ArrayList<>();
+        for (SearchHit searchHit : searchHits) {
+            resultList.add(searchHit.getSourceAsString());
+        }
+        Gson gson = new Gson();
+        String json = gson.toJson(resultList);
+        return json;
     }
 }

@@ -22,6 +22,7 @@ public class DocumentController {
         return documentDao.getDocumentById(documentId);
     }
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @GetMapping("/search/{query}")
     public String queryIndex(@PathVariable String query) {
         return documentDao.getDocumentsForQuery(query);
