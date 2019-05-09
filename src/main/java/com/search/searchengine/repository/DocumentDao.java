@@ -2,7 +2,6 @@ package com.search.searchengine.repository;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.search.searchengine.model.DocumentES;
 import com.search.searchengine.utility.Utilities;
 import org.elasticsearch.ElasticsearchException;
@@ -26,7 +25,9 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Repository
 public class DocumentDao {
@@ -119,12 +120,15 @@ public class DocumentDao {
         }
         SearchHits hits = searchResponse.getHits();
         SearchHit[] searchHits = hits.getHits();
-        List<String> resultList = new ArrayList<>();
-        for (SearchHit searchHit : searchHits) {
-            resultList.add(searchHit.getSourceAsString());
+        String json = "";
+        for (int i = 0; i < searchHits.length; i++) {
+            String temp = searchHits[i].getSourceAsString();
+            if (i != searchHits.length - 1) {
+                temp = temp + ",";
+            }
+            json += temp;
         }
-        Gson gson = new Gson();
-        String json = gson.toJson(resultList);
+        json = "[" + json + "]";
         return json;
     }
 }
