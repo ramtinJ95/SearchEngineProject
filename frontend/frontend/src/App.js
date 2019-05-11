@@ -44,8 +44,8 @@ class App extends React.Component{
 
     sendQuery (query){
         
-        let term = 'http://130.229.172.166:8080/documents/search/'+query.query
-        fetch('http://130.229.172.166:8080/documents/search/stockholm',{
+        let term = 'http://localhost:8080/documents/search/' + query.query
+        fetch(term,{
           method: "GET",
           mode: "cors",
           headers: {
@@ -56,7 +56,9 @@ class App extends React.Component{
         .then((res) => {
           alert("i fetch")
           //HÄR SPARAR VI NER INFON FRÅN BACKEND"
-          this.setState({result: res.hits.hits})
+            console.log(res);
+
+          this.setState({result: res})
           if(!this.state.haveSearched){
             this.setState({haveSearched: true})
         }
@@ -114,7 +116,7 @@ class App extends React.Component{
                     return (<EvenetField key = {d._id} id= {d._id} ref = {(e) => {
                       const nr = d.id;
                       this[`event${d._id}`] = e;
-                    }} name = {d._source.eventName} summary = {d._source.summary}text = {d._source.text} greetHandler = {this.changeState} changeEvent = {this.changeModal}/>)
+                    }} name = {d.eventName} summary = {d.summary}text = {d.text} greetHandler = {this.changeState} changeEvent = {this.changeModal}/>)
                   })}
         </ListGroup>
           </div>

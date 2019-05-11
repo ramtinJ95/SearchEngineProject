@@ -14,7 +14,6 @@ class SearchField extends React.Component {
 			query: "",
 			"103": true,
 			"101": true,
-			"101": true,
 			"113": true,
 			"105": true,
 			"104": true,
@@ -50,7 +49,10 @@ class SearchField extends React.Component {
 	    //alert('onClickPreventDefault called, form will not submit');
 	    e.preventDefault();
 	    //alert(e.target.value)
-	    this.setState({long: this.props.coords.longitude, lat: this.props.coords.latitude});
+		if (this.props.coords.longitude != null && this.props.coords.latitude != null) {
+			this.setState({long: this.props.coords.longitude, lat: this.props.coords.latitude});
+			console.log("Here is location " + this.props.coords.longitude + " " + this.props.coords.latitude);
+		}
 	    //alert(this.state.long)
 	    this.props.sendQuery(this.state);
   	}
