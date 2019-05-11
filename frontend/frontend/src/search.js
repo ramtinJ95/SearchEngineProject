@@ -49,21 +49,23 @@ class SearchField extends React.Component {
         }
     }
 
+
     onClickPreventDefault(e) {
         //alert('onClickPreventDefault called, form will not submit');
         e.preventDefault();
         //alert(e.target.value)
-        if (this.props.coords.longitude != null && this.props.coords.latitude != null) {
-            console.log(this.props.coords.longitude + " " + this.props.coords.latitude)
-            this.setState({long: this.props.coords.longitude, lat: this.props.coords.latitude});
-        }
-        this.props.sendQuery(this.state);
+        console.log(this.props.coords.longitude + " " + this.props.coords.latitude)
+        this.setState({long: this.props.coords.longitude, lat: this.props.coords.latitude}, function() {
+        	this.props.sendQuery(this.state);
+        });
+        
     }
 
     updateCalendar = date => this.setState({fromDate: date})
     updateCalendar2 = date => this.setState({toDate: date})
 
     componentDidMount() {
+
         this.input.focus()
     }
 
