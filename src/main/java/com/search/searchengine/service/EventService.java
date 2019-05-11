@@ -34,6 +34,7 @@ public class EventService {
         return eventList;
     }
 
+    @SuppressWarnings("Duplicates")
     private static void insertEventsAsJsonDocuments(ArrayList<Event> eventList){
 
         for(int i = 0; i < eventList.size(); i++){
