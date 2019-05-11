@@ -56,7 +56,6 @@ class SearchField extends React.Component {
         if (this.props.coords.longitude != null && this.props.coords.latitude != null) {
             this.setState({long: this.props.coords.longitude, lat: this.props.coords.latitude});
         }
-
         this.props.sendQuery(this.state);
     }
 

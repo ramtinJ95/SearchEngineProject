@@ -44,43 +44,15 @@ class App extends React.Component {
 
     sendQuery(query) {
         let term = 'http://localhost:8080/documents/search/'
-        const input = {
-            'query': query.query,
-            'music': this.state.music,
-            'businessAndProfessional': this.state.businessAndProfessional,
-            'foodAndDrink': this.state.foodAndDrink,
-            'communityAndCulture': this.state.communityAndCulture,
-            'performingAndVisualArts': this.state.performingAndVisualArts,
-            'filmAndMediaAndEntertainment': this.state.filmAndMediaAndEntertainment,
-            'sportsAndFitness': this.state.sportsAndFitness,
-            'healthAndWellness': this.state.healthAndWellness,
-            'scienceAndTechnology': this.state.scienceAndTechnology,
-            'travelAndOutdoor': this.state.travelAndOutdoor,
-            'charityAndCauses': this.state.charityAndCauses,
-            'religionAndSpirituality': this.state.religionAndSpirituality,
-            'familyAndEducation': this.state.familyAndEducation,
-            'seasonalAndHoliday': this.state.seasonalAndHoliday,
-            'governmentAndPolitics': this.state.governmentAndPolitics,
-            'fashionAndBeauty': this.state.fashionAndBeauty,
-            'homeAndLifestyle': this.state.homeAndLifestyle,
-            'autoAndBoatAndAir': this.state.autoAndBoatAndAir,
-            'hobbiesAndSpecialAndInterest': this.state.hobbiesAndSpecialAndInterest,
-            'other': this.state.other,
-            'schoolActivities': this.state.schoolActivities,
-            'longitude': this.state.long,
-            'latitude': this.state.lat,
-            'fromDate': this.state.fromDate,
-            'toDate': this.state.toDate,
-            'isLocataionChecked': this.state.isLocataionChecked
-        }
-        console.log(input)
+
+        console.log(query)
         fetch(term, {
             method: "POST",
             mode: "cors",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(input)
+            body: JSON.stringify(query)
         })
             .then((response) => response.json())
             .then((res) => {
