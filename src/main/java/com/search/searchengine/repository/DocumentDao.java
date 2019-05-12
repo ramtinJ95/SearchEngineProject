@@ -9,8 +9,11 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -104,21 +107,55 @@ public class DocumentDao {
         }
     }
 
+
     // Search for query
     public String getDocumentsForQuery(String query) {
-        SearchRequest searchRequest = new SearchRequest(INDEX);
+        MultiSearchRequest request = new MultiSearchRequest();
+
+        SearchRequest firstSearchRequest = new SearchRequest(INDEX);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.size(100);
+        //searchSourceBuilder.size(100);
         searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
-        searchRequest.source(searchSourceBuilder);
-        SearchResponse searchResponse = null;
+        firstSearchRequest.source(searchSourceBuilder);
+        request.add(firstSearchRequest);
+
+        SearchRequest secondSearchRequest = new SearchRequest();
+        searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchQuery("text", query));
+        secondSearchRequest.source(searchSourceBuilder);
+        request.add(secondSearchRequest);
+
+        SearchRequest thirdSearchRequest = new SearchRequest();
+        searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchQuery("summary", query));
+        thirdSearchRequest.source(searchSourceBuilder);
+        request.add(thirdSearchRequest);
+
+
+        /*
+        MultiSearchResponse.Item firstResponse = response.getResponses()[0];
+        assertNull(firstResponse.getFailure());
+        SearchResponse searchResponse = firstResponse.getResponse();
+        assertEquals(4, searchResponse.getHits().getTotalHits().value);
+        MultiSearchResponse.Item secondResponse = response.getResponses()[1];
+        assertNull(secondResponse.getFailure());
+        searchResponse = secondResponse.getResponse();
+        assertEquals(1, searchResponse.getHits().getTotalHits(
+         */
+
+        MultiSearchResponse searchResponse = null;
 
         try {
-            searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            searchResponse = restHighLevelClient.msearch(request, RequestOptions.DEFAULT);
         } catch (java.io.IOException e) {
             e.getLocalizedMessage();
         }
-        SearchHits hits = searchResponse.getHits();
+        MultiSearchResponse.Item hits = searchResponse.getResponses()[0];
+        for (SearchHit hit : hits.getResponse().getHits()) {
+            System.out.println(hit.getSourceAsString());
+        }
+        //System.out.println(hits.getResponse().getHits());
+        /*
         SearchHit[] searchHits = hits.getHits();
         String json = "";
         for (int i = 0; i < searchHits.length; i++) {
@@ -130,5 +167,8 @@ public class DocumentDao {
         }
         json = "[" + json + "]";
         return json;
+
+         */
+        return  " ";
     }
 }
