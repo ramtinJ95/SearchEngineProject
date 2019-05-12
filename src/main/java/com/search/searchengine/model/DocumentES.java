@@ -13,6 +13,7 @@ public class DocumentES {
     private float price;
     private String latitude;
     private String longitude;
+    private String categoryID;
 
     public void setLatitude(String latitude) {
         this.latitude = latitude;
