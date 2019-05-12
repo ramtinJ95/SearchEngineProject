@@ -44,8 +44,10 @@ public class DocumentController {
     }
 
     @CrossOrigin(origins = "http://localhost:3000")
-    @PostMapping(path = "/search", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public String createAndSearchBasedOnLocation(@RequestBody FrontendQuery frontendQuery) {
+    @PostMapping(path = "/search/temp", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public String createAndSearchBasedOnLocation(@RequestBody String frontendQueryString) {
+        Gson gson = new Gson();
+        FrontendQuery frontendQuery = gson.fromJson(frontendQueryString, FrontendQuery.class);
         ArrayList<Event> eventlist = getEventsBasedOnLocation(frontendQuery.getLatitude(), frontendQuery.getLongitude());
         insertEventsBasedOnLocationAsJson(eventlist, frontendQuery);
         return documentDao.getDocumentsForQuery(frontendQuery.getQuery());
@@ -65,15 +67,17 @@ public class DocumentController {
 
     private ArrayList<Event> getEventsBasedOnLocation(String latitude, String longitude) {
         final String url = "https://www.eventbriteapi.com/v3/events/search/?";
-        String lat = "location.latitude"+latitude;
-        String lon = "&location.longitude" + longitude;
+        String lat = "location.latitude="+latitude;
+        String lon = "&location.longitude=" +longitude;
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth("VPVPICQJQCFVVQM5ELQF");
+        headers.setBearerAuth("");
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
+        String test = url+lat+lon;
+        System.out.println(test);
         ResponseEntity<String> result = restTemplate.exchange(url+lat+lon, HttpMethod.GET, entity, String.class);
 
         Gson gson = new Gson();

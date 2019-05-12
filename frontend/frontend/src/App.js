@@ -43,7 +43,7 @@ class App extends React.Component {
     }
 
     sendQuery(query) {
-        let term = 'http://localhost:8080/documents/search/'
+        let term = 'http://localhost:8080/documents/search/temp'
 
         console.log(query)
         fetch(term, {
