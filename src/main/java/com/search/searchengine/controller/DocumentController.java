@@ -72,7 +72,7 @@ public class DocumentController {
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth("");
+        headers.setBearerAuth("VPVPICQJQCFVVQM5ELQF");
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
