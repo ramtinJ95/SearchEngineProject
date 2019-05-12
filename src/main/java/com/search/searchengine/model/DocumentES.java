@@ -79,5 +79,11 @@ public class DocumentES {
         this.price = price;
     }
 
+    public String getCategoryID() {
+        return categoryID;
+    }
 
+    public void setCategoryID(String categoryID) {
+        this.categoryID = categoryID;
+    }
 }
