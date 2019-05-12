@@ -9,13 +9,11 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -131,18 +129,6 @@ public class DocumentDao {
         thirdSearchRequest.source(searchSourceBuilder);
         request.add(thirdSearchRequest);
 
-
-        /*
-        MultiSearchResponse.Item firstResponse = response.getResponses()[0];
-        assertNull(firstResponse.getFailure());
-        SearchResponse searchResponse = firstResponse.getResponse();
-        assertEquals(4, searchResponse.getHits().getTotalHits().value);
-        MultiSearchResponse.Item secondResponse = response.getResponses()[1];
-        assertNull(secondResponse.getFailure());
-        searchResponse = secondResponse.getResponse();
-        assertEquals(1, searchResponse.getHits().getTotalHits(
-         */
-
         MultiSearchResponse searchResponse = null;
 
         try {
@@ -150,25 +136,19 @@ public class DocumentDao {
         } catch (java.io.IOException e) {
             e.getLocalizedMessage();
         }
-        MultiSearchResponse.Item hits = searchResponse.getResponses()[0];
-        for (SearchHit hit : hits.getResponse().getHits()) {
-            System.out.println(hit.getSourceAsString());
-        }
-        //System.out.println(hits.getResponse().getHits());
-        /*
-        SearchHit[] searchHits = hits.getHits();
+        MultiSearchResponse.Item items[] = searchResponse.getResponses();
         String json = "";
-        for (int i = 0; i < searchHits.length; i++) {
-            String temp = searchHits[i].getSourceAsString();
-            if (i != searchHits.length - 1) {
+        for (MultiSearchResponse.Item item : items) {
+            SearchHits itemResponseHits = item.getResponse().getHits();
+            SearchHit[] searchHits = itemResponseHits.getHits();
+            for (int i = 0; i < searchHits.length; i++) {
+                String temp = searchHits[i].getSourceAsString();
                 temp = temp + ",";
+                json += temp;
             }
-            json += temp;
         }
+        json = json.substring(0, json.length() - 1);
         json = "[" + json + "]";
         return json;
-
-         */
-        return  " ";
     }
 }
