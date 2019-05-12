@@ -2,7 +2,9 @@ package com.search.searchengine.repository;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.search.searchengine.model.DocumentES;
+import com.search.searchengine.model.SearchEntry;
 import com.search.searchengine.utility.Utilities;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -27,6 +29,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 
@@ -138,13 +141,19 @@ public class DocumentDao {
         }
         MultiSearchResponse.Item items[] = searchResponse.getResponses();
         String json = "";
+        Gson gson = new Gson();
+        HashSet<String> eventNameSet = new HashSet();
         for (MultiSearchResponse.Item item : items) {
             SearchHits itemResponseHits = item.getResponse().getHits();
             SearchHit[] searchHits = itemResponseHits.getHits();
             for (int i = 0; i < searchHits.length; i++) {
                 String temp = searchHits[i].getSourceAsString();
-                temp = temp + ",";
-                json += temp;
+                SearchEntry searchEntry = gson.fromJson(temp, SearchEntry.class);
+                if (!eventNameSet.contains(searchEntry.getEventName())) {
+                    temp = temp + ",";
+                    json += temp;
+                    eventNameSet.add(searchEntry.getEventName());
+                }
             }
         }
         json = json.substring(0, json.length() - 1);

@@ -35,7 +35,7 @@ class EventInformaion extends React.Component {
   	handleShow() {
     	this.setState({ show: true });
     	this.props.greetHandler(this.state.event.id);
-    	alert(this.state.event.id)
+    	// alert(this.state.event.id)
   	}
   	redirectToEvent (id) {
   		this.handleClose();
