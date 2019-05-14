@@ -6,6 +6,7 @@ import com.search.searchengine.model.Event;
 import com.search.searchengine.model.EventWrapper;
 import com.search.searchengine.model.FrontendQuery;
 import com.search.searchengine.repository.DocumentDao;
+import com.search.searchengine.utility.Utilities;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,8 @@ public class DocumentController {
     @Autowired
     DocumentDao documentDao;
 
+    Utilities util = new Utilities();
+
     public DocumentController(DocumentDao documentDao){
         this.documentDao = documentDao;
     }
@@ -30,11 +33,11 @@ public class DocumentController {
         return documentDao.getDocumentById(documentId);
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
-    @GetMapping("/search/{query}")
-    public String queryIndex(@PathVariable String query) {
-        return documentDao.getDocumentsForQuery(query);
-    }
+//    @CrossOrigin(origins = "http://localhost:3000")
+//    @GetMapping("/search/{query}")
+//    public String queryIndex(@PathVariable String query) {
+//        return documentDao.getDocumentsForQuery(query);
+//    }
 
     // insert document
     @PostMapping
@@ -47,9 +50,10 @@ public class DocumentController {
     public String createAndSearchBasedOnLocation(@RequestBody String frontendQueryString) {
         Gson gson = new Gson();
         FrontendQuery frontendQuery = gson.fromJson(frontendQueryString, FrontendQuery.class);
-        ArrayList<Event> eventlist = getEventsBasedOnLocation(frontendQuery.getLatitude(), frontendQuery.getLongitude());
-        insertEventsBasedOnLocationAsJson(eventlist, frontendQuery);
-        return documentDao.getDocumentsForQuery(frontendQuery.getQuery());
+//        ArrayList<Event> eventlist = getEventsBasedOnLocation(frontendQuery.getLatitude(), frontendQuery.getLongitude());
+//        insertEventsBasedOnLocationAsJson(eventlist, frontendQuery);
+        ArrayList<String> categoryList = util.getCategory(frontendQuery);
+        return documentDao.getDocumentsForQuery(frontendQuery.getQuery(), categoryList);
     }
 
     // update document
