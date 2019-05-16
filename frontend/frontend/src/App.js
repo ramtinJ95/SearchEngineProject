@@ -35,11 +35,11 @@ class App extends React.Component {
 
         }
         this.setState({latest: e});
-        alert(this.state.latest);
+
     }
 
     greetParent() {
-        alert(`Hella ${this.state.latest}`)
+
     }
 
     sendQuery(query) {
@@ -56,14 +56,17 @@ class App extends React.Component {
         })
             .then((response) => response.json())
             .then((res) => {
-                alert("i fetch")
                 //HÄR SPARAR VI NER INFON FRÅN BACKEND"
                 console.log(res);
-
-                this.setState({result: res})
-                if (!this.state.haveSearched) {
-                    this.setState({haveSearched: true})
+                if(res != []){
+                    this.setState({result: res})
+                    if (!this.state.haveSearched) {
+                        this.setState({haveSearched: true})
+                    } 
+                }else{
+                    alert("Couldnt find what you are looking for")
                 }
+
             }).catch((err) => alert(err))
 
 
@@ -115,9 +118,9 @@ class App extends React.Component {
                     <div>
                         <ListGroup as="ul">
                             {this.state.result.map((d) => {
-                                return (<EvenetField key={d._id} id={d._id} ref={(e) => {
+                                return (<EvenetField key={d.id} id={d.id} ref={(e) => {
                                     const nr = d.id;
-                                    this[`event${d._id}`] = e;
+                                    this[`event${d.id}`] = e;
                                 }} name={d.eventName} summary={d.summary} text={d.text} greetHandler={this.changeState}
                                                      changeEvent={this.changeModal}/>)
                             })}
