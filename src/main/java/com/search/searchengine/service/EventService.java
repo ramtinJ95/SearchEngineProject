@@ -91,10 +91,10 @@ public class EventService {
     }
 
     public static void main(String[] args) {
-        String baseUrl = "https://www.eventbriteapi.com/v3/events/search/?location.address=USA&page=1";
+        String baseUrl = "https://www.eventbriteapi.com/v3/events/search/?location.address=uk&page=1";
         EventWrapper eventWrapper = getEventWrapper(baseUrl);
         insertEventsAsJsonDocuments(eventWrapper);
-        baseUrl = "https://www.eventbriteapi.com/v3/events/search/?location.address=USA&page=%d";
+        baseUrl = "https://www.eventbriteapi.com/v3/events/search/?location.address=uk&page=%d";
         for (int i = 2; i < eventWrapper.getPageCount() + 1; i++) {
             String tempURL = String.format(baseUrl, i);
             System.out.println(tempURL);

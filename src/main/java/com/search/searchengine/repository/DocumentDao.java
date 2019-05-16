@@ -115,7 +115,11 @@ public class DocumentDao {
         MultiSearchRequest request = new MultiSearchRequest();
 
         if (frontendQuery.getLocataionChecked()) {
-            request = searchSuggestions(frontendQuery, request);
+            if (categoryList.isEmpty()) {
+                request = searchSuggestions(frontendQuery, request);
+            } else {
+                request = suggestionWithCategories(frontendQuery, request, categoryList);
+            }
         } else {
             if (categoryList.isEmpty()) {
                 request = searchBoost(frontendQuery, request);
@@ -145,7 +149,7 @@ public class DocumentDao {
 
             searchSourceBuilder.query(QueryBuilders.boolQuery()
                     .must(matchQuery("categoryID", category))
-                    .must(matchQuery("eventName", query)) 
+                    .should(matchQuery("eventName", query))
                     .should(matchQuery("text", query))
                     .should(matchQuery("summary", query)));
             categoryRequest.source(searchSourceBuilder);
@@ -224,5 +228,22 @@ public class DocumentDao {
         json = json.substring(0, json.length() - 1);
         json = "[" + json + "]";
         return json;
+    }
+
+    private MultiSearchRequest suggestionWithCategories(FrontendQuery frontendQuery, MultiSearchRequest request, ArrayList<String> categoryList) {
+        String query = frontendQuery.getQuery();
+        String[] fields = {"eventName", "text", "summary"};
+        String[] texts = {frontendQuery.getQuery()};
+        for (String category : categoryList) {
+            SearchRequest categoryRequest = new SearchRequest();
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+            searchSourceBuilder.query(QueryBuilders.boolQuery()
+                    .must(matchQuery("categoryID", category))
+                    .must(moreLikeThisQuery(fields, texts, null).minTermFreq(1).maxQueryTerms(10)));
+            categoryRequest.source(searchSourceBuilder);
+            request.add(categoryRequest);
+        }
+        return request;
     }
 }
