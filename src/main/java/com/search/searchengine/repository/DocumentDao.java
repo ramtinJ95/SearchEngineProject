@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.search.searchengine.model.DocumentES;
+import com.search.searchengine.model.FrontendQuery;
 import com.search.searchengine.model.SearchEntry;
 import com.search.searchengine.utility.Utilities;
 import org.elasticsearch.ElasticsearchException;
@@ -22,7 +23,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -30,7 +31,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.*;
 
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 @Repository
 public class DocumentDao {
@@ -109,43 +110,97 @@ public class DocumentDao {
 
 
     // Search for query
-    public String getDocumentsForQuery(String query, ArrayList<String> categoryList) {
+    public String getDocumentsForQuery(FrontendQuery frontendQuery, ArrayList<String> categoryList) {
+        String query = frontendQuery.getQuery();
         MultiSearchRequest request = new MultiSearchRequest();
 
-        if (categoryList.isEmpty()) {
-
-            SearchRequest firstSearchRequest = new SearchRequest(INDEX);
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
-            firstSearchRequest.source(searchSourceBuilder);
-            request.add(firstSearchRequest);
-
-            SearchRequest secondSearchRequest = new SearchRequest();
-            searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchQuery("text", query));
-            secondSearchRequest.source(searchSourceBuilder);
-            request.add(secondSearchRequest);
-
-            SearchRequest thirdSearchRequest = new SearchRequest();
-            searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchQuery("summary", query));
-            thirdSearchRequest.source(searchSourceBuilder);
-            request.add(thirdSearchRequest);
+        if (frontendQuery.getLocataionChecked()) {
+            if (categoryList.isEmpty()) {
+                request = searchSuggestions(frontendQuery, request);
+            } else {
+                request = suggestionWithCategories(frontendQuery, request, categoryList);
+            }
         } else {
-            for (String category : categoryList) {
-                SearchRequest categoryRequest = new SearchRequest();
-                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-                searchSourceBuilder.query(QueryBuilders.boolQuery()
-                        .must(matchQuery("categoryID", category))
-                        .must(matchQuery("eventName", query)) // why is there a must on the eventName?
-                        .should(matchQuery("text", query))
-                        .should(matchQuery("summary", query)));
-                categoryRequest.source(searchSourceBuilder);
-                request.add(categoryRequest);
+            if (categoryList.isEmpty()) {
+                request = searchBoost(frontendQuery, request);
+            } else {
+                request = searchCategories(frontendQuery, request, categoryList);
             }
         }
+        return getSearchResults(request);
+    }
 
+    private MultiSearchRequest searchSuggestions(FrontendQuery frontendQuery, MultiSearchRequest request) {
+        String[] fields = {"eventName", "text", "summary"};
+        String[] texts = {frontendQuery.getQuery()};
+        SearchRequest firstSearchRequest = new SearchRequest(INDEX);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.moreLikeThisQuery(fields, texts, null).minTermFreq(1).maxQueryTerms(10));
+        firstSearchRequest.source(searchSourceBuilder);
+        request.add(firstSearchRequest);
+        System.out.println("search suggestions");
+        return request;
+    }
+
+    private MultiSearchRequest searchCategories(FrontendQuery frontendQuery, MultiSearchRequest request, ArrayList<String> categoryList) {
+        String query = frontendQuery.getQuery();
+        for (String category : categoryList) {
+            SearchRequest categoryRequest = new SearchRequest();
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+            searchSourceBuilder.query(QueryBuilders.boolQuery()
+                    .must(matchQuery("categoryID", category))
+                    .should(matchQuery("eventName", query))
+                    .should(matchQuery("text", query))
+                    .should(matchQuery("summary", query)));
+            categoryRequest.source(searchSourceBuilder);
+            request.add(categoryRequest);
+        }
+        System.out.println("search categories");
+        return request;
+    }
+
+    private MultiSearchRequest searchBoost(FrontendQuery frontendQuery, MultiSearchRequest request) {
+        String query = frontendQuery.getQuery();
+        SearchRequest firstSearchRequest = new SearchRequest(INDEX);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchQuery("summary", query));
+
+        searchSourceBuilder.query(disMaxQuery()
+                .add(QueryBuilders.matchQuery("eventName", query))
+                .add(QueryBuilders.matchQuery("summary", query))
+                .add(QueryBuilders.matchQuery("text", query))
+                .boost(1.5f)
+                .tieBreaker(0.7f));
+
+           /*
+
+           searchSourceBuilder.query(QueryBuilders.boolQuery().should(multiMatchQuery(query, "text","summary", "eventName")));
+
+           this code is giving really bad relevance for the docuemnts. write about this in the report
+
+            */
+
+        firstSearchRequest.source(searchSourceBuilder);
+        request.add(firstSearchRequest);
+
+//        SearchRequest secondSearchRequest = new SearchRequest();
+//        searchSourceBuilder = new SearchSourceBuilder();
+//        searchSourceBuilder.query(QueryBuilders.matchQuery("text", query)); // add boost
+//        secondSearchRequest.source(searchSourceBuilder);
+//        request.add(secondSearchRequest);
+//
+//        SearchRequest thirdSearchRequest = new SearchRequest();
+//        searchSourceBuilder = new SearchSourceBuilder();
+//        searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
+//        thirdSearchRequest.source(searchSourceBuilder);
+//        request.add(thirdSearchRequest);
+
+        System.out.println("search boost");
+        return request;
+    }
+
+    private String getSearchResults(MultiSearchRequest request) {
         MultiSearchResponse searchResponse = null;
 
         try {
@@ -156,6 +211,9 @@ public class DocumentDao {
         MultiSearchResponse.Item items[] = searchResponse.getResponses();
         String json = "";
         Gson gson = new Gson();
+        if (items[0].getResponse().getHits().getHits().length == 0) {
+            return gson.toJson(json);
+        }
         HashSet<String> eventNameSet = new HashSet();
         for (MultiSearchResponse.Item item : items) {
             SearchHits itemResponseHits = item.getResponse().getHits();
@@ -173,5 +231,23 @@ public class DocumentDao {
         json = json.substring(0, json.length() - 1);
         json = "[" + json + "]";
         return json;
+    }
+
+    private MultiSearchRequest suggestionWithCategories(FrontendQuery frontendQuery, MultiSearchRequest request, ArrayList<String> categoryList) {
+        String query = frontendQuery.getQuery();
+        String[] fields = {"eventName", "text", "summary"};
+        String[] texts = {frontendQuery.getQuery()};
+        for (String category : categoryList) {
+            SearchRequest categoryRequest = new SearchRequest();
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+            searchSourceBuilder.query(QueryBuilders.boolQuery()
+                    .must(matchQuery("categoryID", category))
+                    .must(moreLikeThisQuery(fields, texts, null).minTermFreq(1).maxQueryTerms(10)));
+            categoryRequest.source(searchSourceBuilder);
+            request.add(categoryRequest);
+        }
+        System.out.println("search mixed");
+        return request;
     }
 }

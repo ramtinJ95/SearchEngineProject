@@ -75,14 +75,7 @@ class EventInformaion extends React.Component {
 	          <Modal.Body>{this.state.event.text}</Modal.Body>
 	          <Modal.Footer>
 	          	<Container>
-		          	<Row>
-		          		<small>Other people who looked at this also looked at: </small>
-		          	</Row>
-		          	<Row>
-			          	{this.state.events.map((d) => {
-			          		return (<Col key = {d.id}><Button variant="link" onClick= {() =>this.redirectToEvent(d.id)}>{d.name}</Button></Col>)
-			          	})}
-		          	</Row>
+
 		          	<Row>
 		          		<Col md = {{offset: 6}}>
 
@@ -91,9 +84,7 @@ class EventInformaion extends React.Component {
 				            <Button variant="secondary"  onClick={this.handleClose}>
 				            	Close
 				            </Button>
-				            <Button variant="primary"  onClick={this.handleClose}>
-				            	This is what im looking for!
-				            </Button>
+
 			            </Col>
 		            </Row>
 	            </Container>

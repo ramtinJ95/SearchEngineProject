@@ -115,9 +115,15 @@ class SearchField extends React.Component {
 
                 <Row className="justify-content-md-center">
 
+
                     <Col>
                         <OverlayTrigger trigger="click" placement="auto" rootClose="true" overlay={<Popover>
                             <Form.Check id={22} type="checkbox" inline label="Suggest events like this"
+
+                    <Col>
+                        <OverlayTrigger trigger="click" placement="auto" rootClose="true" overlay={<Popover>
+                            <Form.Check id={22} type="checkbox" inline label="Search Like This Event"
+
                                         defaultChecked={this.state.isLocataionChecked}
                                         value={this.state.isLocataionChecked}
                                         onChange={(e) => {
@@ -130,7 +136,11 @@ class SearchField extends React.Component {
                                         }}
                             />
                         </Popover>}>
+
                             <Button variant="link" className="btn-cat">Suggest events like this</Button>
+
+                            <Button variant="link" className="btn-cat">Search Like This Event</Button>
+
                         </OverlayTrigger>
                     </Col>
                     <Col>
