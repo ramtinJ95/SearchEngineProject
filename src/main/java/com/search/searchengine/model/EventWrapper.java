@@ -8,6 +8,14 @@ public class EventWrapper implements Serializable {
 
     private Location location;
 
+    public String getLatitude() {
+        return location.getLatitude();
+    }
+
+    public String getLongitude() {
+        return location.getLongitude();
+    }
+
     class Location implements Serializable {
         String latitude;
         AugmentedLocation augmented_location;
@@ -88,6 +96,10 @@ public class EventWrapper implements Serializable {
     }
 
     private Pagination pagination;
+
+    public Integer getPageCount() {
+        return pagination.getPage_count();
+    }
 
     class Pagination implements Serializable {
         Integer object_count;

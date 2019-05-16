@@ -2,7 +2,11 @@ package com.search.searchengine.repository;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.search.searchengine.model.DocumentES;
+import com.search.searchengine.model.FrontendQuery;
+import com.search.searchengine.model.SearchEntry;
+import com.search.searchengine.utility.Utilities;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -10,17 +14,24 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.*;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 @Repository
 public class DocumentDao {
@@ -28,8 +39,9 @@ public class DocumentDao {
     private final String TYPE = "events";
     private RestHighLevelClient restHighLevelClient;
     private ObjectMapper objectMapper;
+    private Utilities utilities = new Utilities();
 
-    public DocumentDao(ObjectMapper objectMapper, RestHighLevelClient restHighLevelClient){
+    public DocumentDao(ObjectMapper objectMapper, RestHighLevelClient restHighLevelClient) {
         this.objectMapper = objectMapper;
         this.restHighLevelClient = restHighLevelClient;
 
@@ -39,46 +51,28 @@ public class DocumentDao {
     }
 
     // insert
-    public DocumentES insertDocument(DocumentES document){
+    public DocumentES insertDocument(DocumentES document) {
         document.setId(UUID.randomUUID().toString());
         Map dataMap = objectMapper.convertValue(document, Map.class);
         IndexRequest indexRequest = new IndexRequest(INDEX).id(document.getId()).source(dataMap);
 
         try {
             IndexResponse response = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
-        } catch(ElasticsearchException e) {
-            e.getDetailedMessage();
-        } catch (java.io.IOException ex){
-            ex.getLocalizedMessage();
-        }
-        return document;
-    }
-/*
-    public EventDocument insertEventAsDocument(Event event){
-        EventDocument eventDocument = new EventDocument();
-        eventDocument.setEvent(event);
-        eventDocument.setId(UUID.randomUUID().toString());
-        Map dataMap = objectMapper.convertValue(eventDocument, Map.class);
-        IndexRequest indexRequest = new IndexRequest(INDEX).id(eventDocument.getId()).source(dataMap);
-        try{
-            IndexResponse response = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
-        } catch (ElasticsearchException e){
+        } catch (ElasticsearchException e) {
             e.getDetailedMessage();
         } catch (java.io.IOException ex) {
             ex.getLocalizedMessage();
         }
-        return eventDocument;
+        return document;
     }
 
-
- */
     // search query by id for now
-    public Map<String, Object> getDocumentById(String documentId){
-        GetRequest getRequest = new GetRequest(INDEX,documentId);
+    public Map<String, Object> getDocumentById(String documentId) {
+        GetRequest getRequest = new GetRequest(INDEX, documentId);
         GetResponse getResponse = null;
         try {
             getResponse = restHighLevelClient.get(getRequest, RequestOptions.DEFAULT);
-        } catch (java.io.IOException e){
+        } catch (java.io.IOException e) {
             e.getLocalizedMessage();
         }
         Map<String, Object> sourceAsMap = getResponse.getSourceAsMap();
@@ -86,17 +80,17 @@ public class DocumentDao {
     }
 
     // update document by id
-    public Map<String, Object> updateDocumentById(String documentId, DocumentES document){
+    public Map<String, Object> updateDocumentById(String documentId, DocumentES document) {
         UpdateRequest updateRequest = new UpdateRequest(INDEX, TYPE, documentId).fetchSource(true); // fetch object after update
         Map<String, Object> error = new HashMap<>();
         error.put("Error", "unable to update docuemnt");
-        try{
+        try {
             String documentJson = objectMapper.writeValueAsString(document);
             updateRequest.doc(documentJson, XContentType.JSON);
             UpdateResponse updateResponse = restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
             Map<String, Object> sourceAsMap = updateResponse.getGetResult().sourceAsMap();
             return sourceAsMap;
-        } catch (JsonProcessingException e){
+        } catch (JsonProcessingException e) {
             e.getMessage();
         } catch (java.io.IOException e) {
             e.getLocalizedMessage();
@@ -105,12 +99,155 @@ public class DocumentDao {
     }
 
     // delete document
-    public void deleteDocumentById(String documentId){
+    public void deleteDocumentById(String documentId) {
         DeleteRequest deleteRequest = new DeleteRequest(INDEX, TYPE, documentId);
-        try{
+        try {
             DeleteResponse deleteResponse = restHighLevelClient.delete(deleteRequest, RequestOptions.DEFAULT);
         } catch (java.io.IOException e) {
             e.getLocalizedMessage();
         }
+    }
+
+
+    // Search for query
+    public String getDocumentsForQuery(FrontendQuery frontendQuery, ArrayList<String> categoryList) {
+        String query = frontendQuery.getQuery();
+        MultiSearchRequest request = new MultiSearchRequest();
+
+        if (frontendQuery.getLocataionChecked()) {
+            if (categoryList.isEmpty()) {
+                request = searchSuggestions(frontendQuery, request);
+            } else {
+                request = suggestionWithCategories(frontendQuery, request, categoryList);
+            }
+        } else {
+            if (categoryList.isEmpty()) {
+                request = searchBoost(frontendQuery, request);
+            } else {
+                request = searchCategories(frontendQuery, request, categoryList);
+            }
+        }
+        return getSearchResults(request);
+    }
+
+    private MultiSearchRequest searchSuggestions(FrontendQuery frontendQuery, MultiSearchRequest request) {
+        String[] fields = {"eventName", "text", "summary"};
+        String[] texts = {frontendQuery.getQuery()};
+        SearchRequest firstSearchRequest = new SearchRequest(INDEX);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.moreLikeThisQuery(fields, texts, null).minTermFreq(1).maxQueryTerms(10));
+        firstSearchRequest.source(searchSourceBuilder);
+        request.add(firstSearchRequest);
+        System.out.println("search suggestions");
+        return request;
+    }
+
+    private MultiSearchRequest searchCategories(FrontendQuery frontendQuery, MultiSearchRequest request, ArrayList<String> categoryList) {
+        String query = frontendQuery.getQuery();
+        for (String category : categoryList) {
+            SearchRequest categoryRequest = new SearchRequest();
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+            searchSourceBuilder.query(QueryBuilders.boolQuery()
+                    .must(matchQuery("categoryID", category))
+                    .should(matchQuery("eventName", query))
+                    .should(matchQuery("text", query))
+                    .should(matchQuery("summary", query)));
+            categoryRequest.source(searchSourceBuilder);
+            request.add(categoryRequest);
+        }
+        System.out.println("search categories");
+        return request;
+    }
+
+    private MultiSearchRequest searchBoost(FrontendQuery frontendQuery, MultiSearchRequest request) {
+        String query = frontendQuery.getQuery();
+        SearchRequest firstSearchRequest = new SearchRequest(INDEX);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchQuery("summary", query));
+
+        searchSourceBuilder.query(disMaxQuery()
+                .add(QueryBuilders.matchQuery("eventName", query))
+                .add(QueryBuilders.matchQuery("summary", query))
+                .add(QueryBuilders.matchQuery("text", query))
+                .boost(1.5f)
+                .tieBreaker(0.7f));
+
+           /*
+
+           searchSourceBuilder.query(QueryBuilders.boolQuery().should(multiMatchQuery(query, "text","summary", "eventName")));
+
+           this code is giving really bad relevance for the docuemnts. write about this in the report
+
+            */
+
+        firstSearchRequest.source(searchSourceBuilder);
+        request.add(firstSearchRequest);
+
+//        SearchRequest secondSearchRequest = new SearchRequest();
+//        searchSourceBuilder = new SearchSourceBuilder();
+//        searchSourceBuilder.query(QueryBuilders.matchQuery("text", query)); // add boost
+//        secondSearchRequest.source(searchSourceBuilder);
+//        request.add(secondSearchRequest);
+//
+//        SearchRequest thirdSearchRequest = new SearchRequest();
+//        searchSourceBuilder = new SearchSourceBuilder();
+//        searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
+//        thirdSearchRequest.source(searchSourceBuilder);
+//        request.add(thirdSearchRequest);
+
+        System.out.println("search boost");
+        return request;
+    }
+
+    private String getSearchResults(MultiSearchRequest request) {
+        MultiSearchResponse searchResponse = null;
+
+        try {
+            searchResponse = restHighLevelClient.msearch(request, RequestOptions.DEFAULT);
+        } catch (java.io.IOException e) {
+            e.getLocalizedMessage();
+        }
+        MultiSearchResponse.Item items[] = searchResponse.getResponses();
+        String json = "";
+        Gson gson = new Gson();
+        if (items[0].getResponse().getHits().getHits().length == 0) {
+            return gson.toJson(json);
+        }
+        HashSet<String> eventNameSet = new HashSet();
+        for (MultiSearchResponse.Item item : items) {
+            SearchHits itemResponseHits = item.getResponse().getHits();
+            SearchHit[] searchHits = itemResponseHits.getHits();
+            for (int i = 0; i < searchHits.length; i++) {
+                String temp = searchHits[i].getSourceAsString();
+                SearchEntry searchEntry = gson.fromJson(temp, SearchEntry.class);
+                if (!eventNameSet.contains(searchEntry.getEventName())) {
+                    temp = temp + ",";
+                    json += temp;
+                    eventNameSet.add(searchEntry.getEventName());
+                }
+            }
+        }
+        json = json.substring(0, json.length() - 1);
+        json = "[" + json + "]";
+        return json;
+    }
+
+    private MultiSearchRequest suggestionWithCategories(FrontendQuery frontendQuery, MultiSearchRequest request, ArrayList<String> categoryList) {
+        String query = frontendQuery.getQuery();
+        String[] fields = {"eventName", "text", "summary"};
+        String[] texts = {frontendQuery.getQuery()};
+        for (String category : categoryList) {
+            SearchRequest categoryRequest = new SearchRequest();
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+            searchSourceBuilder.query(QueryBuilders.boolQuery()
+                    .must(matchQuery("categoryID", category))
+                    .must(moreLikeThisQuery(fields, texts, null).minTermFreq(1).maxQueryTerms(10)));
+            categoryRequest.source(searchSourceBuilder);
+            request.add(categoryRequest);
+        }
+        System.out.println("search mixed");
+        return request;
     }
 }
