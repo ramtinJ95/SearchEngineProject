@@ -63,6 +63,8 @@ class App extends React.Component {
                     if (!this.state.haveSearched) {
                         this.setState({haveSearched: true})
                     } 
+                }else{
+                    alert("Couldnt find what you are looking for")
                 }
 
             }).catch((err) => alert(err))
