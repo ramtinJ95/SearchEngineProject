@@ -22,7 +22,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.*;
 
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 @Repository
 public class DocumentDao {
@@ -114,23 +114,45 @@ public class DocumentDao {
 
         if (categoryList.isEmpty()) {
 
+
             SearchRequest firstSearchRequest = new SearchRequest(INDEX);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
+            searchSourceBuilder.query(QueryBuilders.matchQuery("summary", query));
+
+            searchSourceBuilder.query(disMaxQuery()
+                    .add(QueryBuilders.matchQuery("eventName", query))
+                    .add(QueryBuilders.matchQuery("summary", query))
+                    .add(QueryBuilders.matchQuery("text", query))
+                    .boost(1.5f)
+                    .tieBreaker(0.7f))
+                    ;
+
+           /*
+
+           searchSourceBuilder.query(QueryBuilders.boolQuery().should(multiMatchQuery(query, "text","summary", "eventName")));
+
+           this code is giving really bad relevance for the docuemnts. write about this in the report
+
+            */
+
             firstSearchRequest.source(searchSourceBuilder);
             request.add(firstSearchRequest);
-
+/*
             SearchRequest secondSearchRequest = new SearchRequest();
             searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchQuery("text", query));
+            searchSourceBuilder.query(QueryBuilders.matchQuery("text", query)); // add boost
             secondSearchRequest.source(searchSourceBuilder);
             request.add(secondSearchRequest);
 
             SearchRequest thirdSearchRequest = new SearchRequest();
             searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchQuery("summary", query));
+            searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
             thirdSearchRequest.source(searchSourceBuilder);
             request.add(thirdSearchRequest);
+
+ */
+
+
         } else {
             for (String category : categoryList) {
                 SearchRequest categoryRequest = new SearchRequest();

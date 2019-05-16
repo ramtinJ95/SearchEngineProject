@@ -44,6 +44,10 @@ public class DocumentController {
     public String createAndSearchBasedOnLocation(@RequestBody String frontendQueryString) {
         Gson gson = new Gson();
         FrontendQuery frontendQuery = gson.fromJson(frontendQueryString, FrontendQuery.class);
+        if(frontendQuery.getQuery().isEmpty()) {
+            String empytReturn = "";
+            return gson.toJson(empytReturn);
+        }
 //        ArrayList<Event> eventlist = getEventsBasedOnLocation(frontendQuery.getLatitude(), frontendQuery.getLongitude());
 //        insertEventsBasedOnLocationAsJson(eventlist, frontendQuery);
         ArrayList<String> categoryList = util.getCategory(frontendQuery);
