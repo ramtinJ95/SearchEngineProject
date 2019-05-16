@@ -113,9 +113,9 @@ public class DocumentDao {
         MultiSearchRequest request = new MultiSearchRequest();
 
         if (categoryList.isEmpty()) {
+
             SearchRequest firstSearchRequest = new SearchRequest(INDEX);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            //searchSourceBuilder.size(100);
             searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
             firstSearchRequest.source(searchSourceBuilder);
             request.add(firstSearchRequest);
@@ -138,14 +138,13 @@ public class DocumentDao {
 
                 searchSourceBuilder.query(QueryBuilders.boolQuery()
                         .must(matchQuery("categoryID", category))
-                        .must(matchQuery("eventName", query))
+                        .must(matchQuery("eventName", query)) // why is there a must on the eventName?
                         .should(matchQuery("text", query))
                         .should(matchQuery("summary", query)));
                 categoryRequest.source(searchSourceBuilder);
                 request.add(categoryRequest);
             }
         }
-
 
         MultiSearchResponse searchResponse = null;
 
