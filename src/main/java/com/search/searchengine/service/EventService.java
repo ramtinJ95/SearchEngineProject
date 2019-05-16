@@ -97,7 +97,7 @@ public class EventService {
         baseUrl = "https://www.eventbriteapi.com/v3/events/search/?location.address=USA&page=%d";
         for (int i = 2; i < eventWrapper.getPageCount() + 1; i++) {
             String tempURL = String.format(baseUrl, i);
-            System.out.println(baseUrl);
+            System.out.println(tempURL);
             EventWrapper temp = getEventWrapper(tempURL);
             insertEventsAsJsonDocuments(temp);
         }

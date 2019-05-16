@@ -114,20 +114,58 @@ public class DocumentDao {
         String query = frontendQuery.getQuery();
         MultiSearchRequest request = new MultiSearchRequest();
 
-        if (categoryList.isEmpty()) {
+        if (frontendQuery.getLocataionChecked()) {
+            request = searchSuggestions(frontendQuery, request);
+        } else {
+            if (categoryList.isEmpty()) {
+                request = searchBoost(frontendQuery, request);
+            } else {
+                request = searchCategories(frontendQuery, request, categoryList);
+            }
+        }
+        return getSearchResults(request);
+    }
 
+    private MultiSearchRequest searchSuggestions(FrontendQuery frontendQuery, MultiSearchRequest request) {
+        String[] fields = {"eventName", "text", "summary"};
+        String[] texts = {frontendQuery.getQuery()};
+        SearchRequest firstSearchRequest = new SearchRequest(INDEX);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.moreLikeThisQuery(fields, texts, null).minTermFreq(1).maxQueryTerms(10));
+        firstSearchRequest.source(searchSourceBuilder);
+        request.add(firstSearchRequest);
+        return request;
+    }
 
-            SearchRequest firstSearchRequest = new SearchRequest(INDEX);
+    private MultiSearchRequest searchCategories(FrontendQuery frontendQuery, MultiSearchRequest request, ArrayList<String> categoryList) {
+        String query = frontendQuery.getQuery();
+        for (String category : categoryList) {
+            SearchRequest categoryRequest = new SearchRequest();
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchQuery("summary", query));
 
-            searchSourceBuilder.query(disMaxQuery()
-                    .add(QueryBuilders.matchQuery("eventName", query))
-                    .add(QueryBuilders.matchQuery("summary", query))
-                    .add(QueryBuilders.matchQuery("text", query))
-                    .boost(1.5f)
-                    .tieBreaker(0.7f))
-                    ;
+            searchSourceBuilder.query(QueryBuilders.boolQuery()
+                    .must(matchQuery("categoryID", category))
+                    .must(matchQuery("eventName", query)) 
+                    .should(matchQuery("text", query))
+                    .should(matchQuery("summary", query)));
+            categoryRequest.source(searchSourceBuilder);
+            request.add(categoryRequest);
+        }
+        return request;
+    }
+
+    private MultiSearchRequest searchBoost(FrontendQuery frontendQuery, MultiSearchRequest request) {
+        String query = frontendQuery.getQuery();
+        SearchRequest firstSearchRequest = new SearchRequest(INDEX);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchQuery("summary", query));
+
+        searchSourceBuilder.query(disMaxQuery()
+                .add(QueryBuilders.matchQuery("eventName", query))
+                .add(QueryBuilders.matchQuery("summary", query))
+                .add(QueryBuilders.matchQuery("text", query))
+                .boost(1.5f)
+                .tieBreaker(0.7f));
 
            /*
 
@@ -137,39 +175,25 @@ public class DocumentDao {
 
             */
 
-            firstSearchRequest.source(searchSourceBuilder);
-            request.add(firstSearchRequest);
-/*
-            SearchRequest secondSearchRequest = new SearchRequest();
-            searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchQuery("text", query)); // add boost
-            secondSearchRequest.source(searchSourceBuilder);
-            request.add(secondSearchRequest);
+        firstSearchRequest.source(searchSourceBuilder);
+        request.add(firstSearchRequest);
 
-            SearchRequest thirdSearchRequest = new SearchRequest();
-            searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
-            thirdSearchRequest.source(searchSourceBuilder);
-            request.add(thirdSearchRequest);
+//        SearchRequest secondSearchRequest = new SearchRequest();
+//        searchSourceBuilder = new SearchSourceBuilder();
+//        searchSourceBuilder.query(QueryBuilders.matchQuery("text", query)); // add boost
+//        secondSearchRequest.source(searchSourceBuilder);
+//        request.add(secondSearchRequest);
+//
+//        SearchRequest thirdSearchRequest = new SearchRequest();
+//        searchSourceBuilder = new SearchSourceBuilder();
+//        searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
+//        thirdSearchRequest.source(searchSourceBuilder);
+//        request.add(thirdSearchRequest);
 
- */
+        return request;
+    }
 
-
-        } else {
-            for (String category : categoryList) {
-                SearchRequest categoryRequest = new SearchRequest();
-                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-                searchSourceBuilder.query(QueryBuilders.boolQuery()
-                        .must(matchQuery("categoryID", category))
-                        .must(matchQuery("eventName", query)) // why is there a must on the eventName?
-                        .should(matchQuery("text", query))
-                        .should(matchQuery("summary", query)));
-                categoryRequest.source(searchSourceBuilder);
-                request.add(categoryRequest);
-            }
-        }
-
+    private String getSearchResults(MultiSearchRequest request) {
         MultiSearchResponse searchResponse = null;
 
         try {
@@ -180,6 +204,9 @@ public class DocumentDao {
         MultiSearchResponse.Item items[] = searchResponse.getResponses();
         String json = "";
         Gson gson = new Gson();
+        if (items[0].getResponse().getHits().getHits().length == 0) {
+            return gson.toJson(json);
+        }
         HashSet<String> eventNameSet = new HashSet();
         for (MultiSearchResponse.Item item : items) {
             SearchHits itemResponseHits = item.getResponse().getHits();
