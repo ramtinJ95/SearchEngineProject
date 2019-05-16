@@ -33,8 +33,8 @@ class SearchField extends React.Component {
             hobbiesAndSpecialAndInterest: "",
             other: "",
             schoolActivities: "",
-            longitude: "",
-            latitude: "",
+            longitude: "40.748425",
+            latitude: "-73.984535",
             fromDate: new Date(),
             toDate: new Date(),
             isLocataionChecked: false
@@ -54,10 +54,11 @@ class SearchField extends React.Component {
         //alert('onClickPreventDefault called, form will not submit');
         e.preventDefault();
         //alert(e.target.value)
-        console.log(this.props.coords.longitude + " " + this.props.coords.latitude)
-        this.setState({longitude: this.props.coords.longitude, latitude: this.props.coords.latitude}, function () {
-            this.props.sendQuery(this.state);
-        });
+        //console.log(this.props.coords.longitude + " " + this.props.coords.latitude)
+        this.props.sendQuery(this.state);
+        //this.setState({longitude: this.props.coords.longitude, latitude: this.props.coords.latitude}, function () {
+        //    this.props.sendQuery(this.state);
+        //});
 
     }
 

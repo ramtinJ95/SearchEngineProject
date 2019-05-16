@@ -58,11 +58,13 @@ class App extends React.Component {
             .then((res) => {
                 //HÄR SPARAR VI NER INFON FRÅN BACKEND"
                 console.log(res);
-
-                this.setState({result: res})
-                if (!this.state.haveSearched) {
-                    this.setState({haveSearched: true})
+                if(res != []){
+                    this.setState({result: res})
+                    if (!this.state.haveSearched) {
+                        this.setState({haveSearched: true})
+                    } 
                 }
+
             }).catch((err) => alert(err))
 
 
