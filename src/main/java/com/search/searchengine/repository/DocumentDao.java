@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.search.searchengine.model.DocumentES;
+import com.search.searchengine.model.FrontendQuery;
 import com.search.searchengine.model.SearchEntry;
 import com.search.searchengine.utility.Utilities;
 import org.elasticsearch.ElasticsearchException;
@@ -109,7 +110,8 @@ public class DocumentDao {
 
 
     // Search for query
-    public String getDocumentsForQuery(String query, ArrayList<String> categoryList) {
+    public String getDocumentsForQuery(FrontendQuery frontendQuery, ArrayList<String> categoryList) {
+        String query = frontendQuery.getQuery();
         MultiSearchRequest request = new MultiSearchRequest();
 
         if (categoryList.isEmpty()) {

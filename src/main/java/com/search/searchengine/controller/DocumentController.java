@@ -47,7 +47,7 @@ public class DocumentController {
 //        ArrayList<Event> eventlist = getEventsBasedOnLocation(frontendQuery.getLatitude(), frontendQuery.getLongitude());
 //        insertEventsBasedOnLocationAsJson(eventlist, frontendQuery);
         ArrayList<String> categoryList = util.getCategory(frontendQuery);
-        return documentDao.getDocumentsForQuery(frontendQuery.getQuery(), categoryList);
+        return documentDao.getDocumentsForQuery(frontendQuery, categoryList);
     }
 
     // update document
