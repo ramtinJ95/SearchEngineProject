@@ -138,6 +138,7 @@ public class DocumentDao {
         searchSourceBuilder.query(QueryBuilders.moreLikeThisQuery(fields, texts, null).minTermFreq(1).maxQueryTerms(10));
         firstSearchRequest.source(searchSourceBuilder);
         request.add(firstSearchRequest);
+        System.out.println("search suggestions");
         return request;
     }
 
@@ -155,6 +156,7 @@ public class DocumentDao {
             categoryRequest.source(searchSourceBuilder);
             request.add(categoryRequest);
         }
+        System.out.println("search categories");
         return request;
     }
 
@@ -194,6 +196,7 @@ public class DocumentDao {
 //        thirdSearchRequest.source(searchSourceBuilder);
 //        request.add(thirdSearchRequest);
 
+        System.out.println("search boost");
         return request;
     }
 
@@ -244,6 +247,7 @@ public class DocumentDao {
             categoryRequest.source(searchSourceBuilder);
             request.add(categoryRequest);
         }
+        System.out.println("search mixed");
         return request;
     }
 }

@@ -87,25 +87,8 @@ class SearchField extends React.Component {
 
                 <Row className="justify-content-md-center">
                     <Col>
-                        <OverlayTrigger trigger="click" placement="auto" rootClose="true" overlay={
-                            <Popover>
-                                <Calendar onClickDay={this.updateCalendar} value={this.state.fromDate}/>
-                            </Popover>}>
-                            <Button variant="link" className="btn-cat">From date
-                                : {this.state.fromDate.toLocaleDateString()}</Button>
-                        </OverlayTrigger>
-                    </Col>
-                    <Col>
                         <OverlayTrigger trigger="click" placement="auto" rootClose="true" overlay={<Popover>
-                            <Calendar onClickDay={this.updateCalendar2} value={this.state.toDate}/>
-                        </Popover>}>
-                            <Button variant="link" className="btn-cat">To date
-                                : {this.state.toDate.toLocaleDateString()}</Button>
-                        </OverlayTrigger>
-                    </Col>
-                    <Col>
-                        <OverlayTrigger trigger="click" placement="auto" rootClose="true" overlay={<Popover>
-                            <Form.Check id={22} type="checkbox" inline label="Search Nearby Events"
+                            <Form.Check id={22} type="checkbox" inline label="Search Like This Event"
                                         defaultChecked={this.state.isLocataionChecked}
                                         value={this.state.isLocataionChecked}
                                         onChange={(e) => {
@@ -118,7 +101,7 @@ class SearchField extends React.Component {
                                         }}
                             />
                         </Popover>}>
-                            <Button variant="link" className="btn-cat">Search Nearby Events</Button>
+                            <Button variant="link" className="btn-cat">Search Like This Event</Button>
                         </OverlayTrigger>
                     </Col>
                     <Col>
