@@ -1,10 +1,11 @@
 import React from 'react';
 //import 'bootstrap/dist/css/bootstrap.css';
 import './search.css';
-import {FormControl, Form, Popover, OverlayTrigger, Button, Row, Col} from 'react-bootstrap';
+import {FormControl, Form, Popover, OverlayTrigger, Button, Row, Col, Dropdown} from 'react-bootstrap';
 import Geo from './geo';
 import {geolocated} from 'react-geolocated';
 import Calendar from 'react-calendar'
+import CustomToggle from './CustomToggle'
 
 
 class SearchField extends React.Component {
@@ -37,8 +38,12 @@ class SearchField extends React.Component {
             latitude: "-73.984535",
             fromDate: new Date(),
             toDate: new Date(),
-            isLocataionChecked: false
+            isLocataionChecked: false,
+
+        Suggestions: ["cool", "or not"] 
+
         }
+        this.backpropQuery = this.backpropQuery.bind(this)
 
     }
 
@@ -55,15 +60,31 @@ class SearchField extends React.Component {
         e.preventDefault();
         //alert(e.target.value)
         //console.log(this.props.coords.longitude + " " + this.props.coords.latitude)
-        this.props.sendQuery(this.state);
+        //this.props.sendQuery(this.state);
         //this.setState({longitude: this.props.coords.longitude, latitude: this.props.coords.latitude}, function () {
         //    this.props.sendQuery(this.state);
         //});
 
     }
+    backpropQuery(e) {
+        alert("THE QUERY " + e)
+        this.setState({query: e}, function() {
+            this.props.sendQuery(this.state);
+        })
+        
+    }
 
     updateCalendar = date => this.setState({fromDate: date})
     updateCalendar2 = date => this.setState({toDate: date})
+
+    getQueryComplet(queryString) {
+        //alert("vill hämta query!")
+        fetch('Apply backend herer')
+        .then(response => response.json())
+        .then((res) => {
+
+        })
+    }
 
     componentDidMount() {
 
@@ -78,34 +99,25 @@ class SearchField extends React.Component {
                 this.onClickPreventDefault(e);
             }}>
                 <Form.Group>
+
                     <Form.Control ref={(e) => {
                         this.input = e
                     }} type="text" placeholder="What event are you looking for?" onChange={(e) => {
                         this.setState({query: e.target.value})
                     }}/>
                 </Form.Group>
+                <Dropdown>
+                    <Dropdown.Toggle as={CustomToggle} fetch ={this.getQueryComplet} query ={this.backpropQuery}/>
+                    <Dropdown.Menu>
+                        <Dropdown.Item>haaaaaaj</Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown>
 
                 <Row className="justify-content-md-center">
-                    <Col>
-                        <OverlayTrigger trigger="click" placement="auto" rootClose="true" overlay={
-                            <Popover>
-                                <Calendar onClickDay={this.updateCalendar} value={this.state.fromDate}/>
-                            </Popover>}>
-                            <Button variant="link" className="btn-cat">From date
-                                : {this.state.fromDate.toLocaleDateString()}</Button>
-                        </OverlayTrigger>
-                    </Col>
+
                     <Col>
                         <OverlayTrigger trigger="click" placement="auto" rootClose="true" overlay={<Popover>
-                            <Calendar onClickDay={this.updateCalendar2} value={this.state.toDate}/>
-                        </Popover>}>
-                            <Button variant="link" className="btn-cat">To date
-                                : {this.state.toDate.toLocaleDateString()}</Button>
-                        </OverlayTrigger>
-                    </Col>
-                    <Col>
-                        <OverlayTrigger trigger="click" placement="auto" rootClose="true" overlay={<Popover>
-                            <Form.Check id={22} type="checkbox" inline label="Search Nearby Events"
+                            <Form.Check id={22} type="checkbox" inline label="Suggest events like this"
                                         defaultChecked={this.state.isLocataionChecked}
                                         value={this.state.isLocataionChecked}
                                         onChange={(e) => {
@@ -118,7 +130,7 @@ class SearchField extends React.Component {
                                         }}
                             />
                         </Popover>}>
-                            <Button variant="link" className="btn-cat">Search Nearby Events</Button>
+                            <Button variant="link" className="btn-cat">Suggest events like this</Button>
                         </OverlayTrigger>
                     </Col>
                     <Col>
