@@ -28,10 +28,9 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 @Repository
 public class DocumentDao {
@@ -110,27 +109,42 @@ public class DocumentDao {
 
 
     // Search for query
-    public String getDocumentsForQuery(String query) {
+    public String getDocumentsForQuery(String query, ArrayList<String> categoryList) {
         MultiSearchRequest request = new MultiSearchRequest();
 
-        SearchRequest firstSearchRequest = new SearchRequest(INDEX);
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        //searchSourceBuilder.size(100);
-        searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
-        firstSearchRequest.source(searchSourceBuilder);
-        request.add(firstSearchRequest);
+        if (categoryList.isEmpty()) {
 
-        SearchRequest secondSearchRequest = new SearchRequest();
-        searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(QueryBuilders.matchQuery("text", query));
-        secondSearchRequest.source(searchSourceBuilder);
-        request.add(secondSearchRequest);
+            SearchRequest firstSearchRequest = new SearchRequest(INDEX);
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.query(QueryBuilders.matchQuery("eventName", query));
+            firstSearchRequest.source(searchSourceBuilder);
+            request.add(firstSearchRequest);
 
-        SearchRequest thirdSearchRequest = new SearchRequest();
-        searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(QueryBuilders.matchQuery("summary", query));
-        thirdSearchRequest.source(searchSourceBuilder);
-        request.add(thirdSearchRequest);
+            SearchRequest secondSearchRequest = new SearchRequest();
+            searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.query(QueryBuilders.matchQuery("text", query));
+            secondSearchRequest.source(searchSourceBuilder);
+            request.add(secondSearchRequest);
+
+            SearchRequest thirdSearchRequest = new SearchRequest();
+            searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.query(QueryBuilders.matchQuery("summary", query));
+            thirdSearchRequest.source(searchSourceBuilder);
+            request.add(thirdSearchRequest);
+        } else {
+            for (String category : categoryList) {
+                SearchRequest categoryRequest = new SearchRequest();
+                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+                searchSourceBuilder.query(QueryBuilders.boolQuery()
+                        .must(matchQuery("categoryID", category))
+                        .must(matchQuery("eventName", query)) // why is there a must on the eventName?
+                        .should(matchQuery("text", query))
+                        .should(matchQuery("summary", query)));
+                categoryRequest.source(searchSourceBuilder);
+                request.add(categoryRequest);
+            }
+        }
 
         MultiSearchResponse searchResponse = null;
 

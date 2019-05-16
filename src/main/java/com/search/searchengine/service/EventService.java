@@ -19,7 +19,7 @@ public class EventService {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth("NO API KEY");
+        headers.setBearerAuth("VPVPICQJQCFVVQM5ELQF");
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         HttpEntity<String> entity = new HttpEntity<String>(headers);
 
@@ -47,6 +47,7 @@ public class EventService {
             documentES.setStatus(event.getStatus());
             documentES.setSummary(event.getSummary());
             documentES.setText(event.getDescription());
+
             if (event.getCategory_id() != null) {
                 documentES.setCategoryID(event.getCategory_id());
             }
